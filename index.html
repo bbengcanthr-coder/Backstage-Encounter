@@ -1,18 +1,21 @@
+
 <!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BCU FORMULA CONCERT | Backstage Encounter</title>
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <title>BCU FORMULA CONCERT | VVIP LENS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-dark: #09090b;
-            --text-main: #f8fafc;
-            --text-muted: #a1a1aa;
-            --accent-glow: #3b82f6;
-            --glass-bg: rgba(20, 20, 25, 0.75);
-            --glass-border: rgba(255, 255, 255, 0.05);
+            --bg-deep: #050505;
+            --text-light: #f8fafc;
+            --accent-cyan: #22d3ee;
+            --accent-purple: #c084fc;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-highlight: rgba(255, 255, 255, 0.08);
+            --success-color: #10b981;
+            --danger-color: #ef4444;
         }
 
         * {
@@ -21,325 +24,483 @@
             box-sizing: border-box;
             font-family: 'Prompt', sans-serif;
             -webkit-font-smoothing: antialiased;
+            user-select: none;
         }
 
         body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
+            background-color: var(--bg-deep);
+            color: var(--text-light);
             height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            background-image: 
-                radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.15), transparent 50%),
-                radial-gradient(circle at 50% 100%, rgba(139, 92, 246, 0.1), transparent 50%);
-        }
-
-        #game-container {
-            width: 100%;
-            max-width: 800px;
-            height: 100vh;
-            max-height: 900px;
-            position: relative;
             display: flex;
             flex-direction: column;
-        }
-
-        /* Character Art Area (พื้นที่สำหรับใส่รูปวาดของคุณ) */
-        #character-display {
-            flex-grow: 1;
-            display: flex;
+            align-items: center;
             justify-content: center;
-            align-items: flex-end;
+            overflow: hidden;
             position: relative;
-            z-index: 1;
-            padding-bottom: 2rem;
-            animation: fadeIn 1.5s ease-out;
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(34, 211, 238, 0.05), transparent 40%),
+                radial-gradient(circle at 80% 20%, rgba(192, 132, 252, 0.05), transparent 40%);
         }
 
-        /* กล่องข้อความ Placeholder บอกตำแหน่งใส่รูป */
-        .art-placeholder {
+        /* Ambient Concert Lights */
+        .ambient-light {
             position: absolute;
-            top: 40%;
-            text-align: center;
-            color: rgba(255, 255, 255, 0.2);
-            font-size: 0.9rem;
-            letter-spacing: 0.05em;
+            width: 60vw;
+            height: 60vw;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--accent-cyan) 0%, transparent 70%);
+            opacity: 0.05;
+            top: -20%;
+            left: -10%;
+            animation: pulseLight 8s infinite alternate;
+            z-index: 0;
             pointer-events: none;
         }
 
-        /* Dialogue Box (กล่องข้อความ) */
-        #dialogue-box {
-            background: var(--glass-bg);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            padding: 2.5rem 3rem;
-            min-height: 220px;
+        .ambient-light.secondary {
+            background: radial-gradient(circle, var(--accent-purple) 0%, transparent 70%);
+            top: auto;
+            bottom: -20%;
+            left: auto;
+            right: -10%;
+            animation-delay: -4s;
+        }
+
+        /* Main Viewfinder Container */
+        #viewfinder-container {
+            width: 90%;
+            max-width: 500px;
+            aspect-ratio: 4/5;
             position: relative;
             z-index: 10;
-            box-shadow: 0 -20px 40px rgba(0, 0, 0, 0.5);
-            border-top: 1px solid var(--glass-border);
-            border-radius: 32px 32px 0 0;
-            display: flex;
-            flex-direction: column;
-            transition: all 0.3s ease;
+            border-radius: 32px;
+            overflow: hidden;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8), 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
-        #speaker-name {
-            font-size: 1.2rem;
-            font-weight: 800;
-            color: var(--accent-glow);
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            margin-bottom: 0.5rem;
-            display: none; /* ซ่อนไว้ก่อน จะแสดงเมื่อมีคนพูด */
-        }
-
-        #dialogue-text {
-            font-size: 1.1rem;
-            line-height: 1.8;
-            font-weight: 300;
-            color: #e4e4e7;
-        }
-
-        /* Choices Container */
-        #choices-container {
-            position: absolute;
-            top: -120px; /* ลอยอยู่เหนือกล่องข้อความ */
-            left: 0;
+        /* The Art Placeholder / Actual Image */
+        #target-image {
             width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #18181b, #27272a); /* พื้นหลังชั่วคราว */
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 1rem;
-            padding: 0 2rem;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            filter: blur(25px) grayscale(50%); /* เริ่มต้นด้วยการเบลอจัด */
+            transform: scale(1.1);
+            transition: filter 0.8s ease-out, transform 0.8s ease-out;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .art-description {
+            font-size: 1.1rem;
+            font-weight: 300;
+            color: #d4d4d8;
+            line-height: 1.6;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.8s ease-out 0.3s;
+        }
+
+        .art-title {
+            font-size: 2rem;
+            font-weight: 900;
+            background: linear-gradient(to right, #fff, var(--accent-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.8s ease-out 0.1s;
+        }
+
+        /* Camera UI Overlays */
+        .cam-corners {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            z-index: 20;
+            pointer-events: none;
+        }
+        .top-left { top: 20px; left: 20px; border-right: none; border-bottom: none; }
+        .top-right { top: 20px; right: 20px; border-left: none; border-bottom: none; }
+        .bottom-left { bottom: 20px; left: 20px; border-right: none; border-top: none; }
+        .bottom-right { bottom: 20px; right: 20px; border-left: none; border-top: none; }
+
+        .rec-indicator {
+            position: absolute;
+            top: 25px;
+            right: 30px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            color: rgba(255, 255, 255, 0.7);
             z-index: 20;
         }
 
-        .choice-btn {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #fff;
-            padding: 1rem 2rem;
-            border-radius: 50px;
-            font-size: 1rem;
-            font-weight: 400;
-            cursor: pointer;
-            width: 100%;
-            max-width: 400px;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            transform: translateY(10px);
-            opacity: 0;
-            animation: slideUpFade 0.4s forwards;
+        .rec-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--danger-color);
+            border-radius: 50%;
+            animation: blink 1s infinite;
         }
 
-        .choice-btn:hover {
-            background: #fff;
-            color: #000;
-            transform: translateY(-2px) scale(1.02) !important;
-            box-shadow: 0 10px 20px rgba(255, 255, 255, 0.15);
-        }
-
-        /* Next Indicator */
-        .next-indicator {
+        /* Focus Meter UI */
+        #focus-ui {
             position: absolute;
-            bottom: 1.5rem;
-            right: 2rem;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-            animation: pulse 1.5s infinite;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            z-index: 30;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .focus-track {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .focus-perfect-zone {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 15%; /* ความกว้างของจุดโฟกัสที่เพอร์เฟกต์ */
+            height: 100%;
+            background: rgba(16, 185, 129, 0.3);
+            border-left: 1px solid var(--success-color);
+            border-right: 1px solid var(--success-color);
+        }
+
+        .focus-cursor {
+            position: absolute;
+            top: -4px;
+            left: 0%;
+            width: 4px;
+            height: 14px;
+            background: #fff;
+            border-radius: 2px;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+            transform: translateX(-50%);
+        }
+
+        /* Buttons */
+        .snap-btn {
+            background: var(--glass-highlight);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        .snap-btn::before {
+            content: '';
+            position: absolute;
+            width: 54px;
+            height: 54px;
+            background: #fff;
+            border-radius: 50%;
+            transition: all 0.2s ease;
         }
 
-        @keyframes slideUpFade {
-            to { opacity: 1; transform: translateY(0); }
+        .snap-btn:active::before {
+            transform: scale(0.9);
+            background: #e4e4e7;
         }
 
-        @keyframes pulse {
-            0% { opacity: 0.4; }
-            50% { opacity: 1; }
-            100% { opacity: 0.4; }
+        .snap-btn:hover {
+            border-color: rgba(255, 255, 255, 0.5);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
         }
 
-        /* Fade transition effect for text */
-        .fade-text {
-            animation: fadeIn 0.3s ease-in;
+        /* Action Buttons (Next/Retry) */
+        .action-group {
+            position: absolute;
+            bottom: 30px;
+            display: none;
+            gap: 15px;
+            z-index: 40;
         }
+
+        .text-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            cursor: pointer;
+            padding: 10px 20px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            transition: background 0.3s;
+        }
+
+        .text-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Header / Title */
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            z-index: 10;
+        }
+        .event-name {
+            font-size: 0.8rem;
+            letter-spacing: 0.4em;
+            color: var(--accent-cyan);
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 300;
+            letter-spacing: 0.05em;
+            margin-top: 0.5rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Flash Effect */
+        #flash {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #fff;
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        @keyframes pulseLight {
+            0% { transform: scale(1); opacity: 0.03; }
+            100% { transform: scale(1.2); opacity: 0.08; }
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Helper class for perfect shot */
+        .perfect-shot {
+            filter: blur(0px) grayscale(0%) !important;
+            transform: scale(1) !important;
+        }
+        .perfect-shot-text {
+            opacity: 1 !important;
+            transform: translateY(0) !important;
+        }
+
     </style>
 </head>
 <body>
 
-    <div id="game-container">
+    <div class="ambient-light"></div>
+    <div class="ambient-light secondary"></div>
+    <div id="flash"></div>
+
+    <header>
+        <div class="event-name">BCU FORMULA CONCERT</div>
+        <h1>VIP CAMERA ACCESS</h1>
+    </header>
+
+    <div id="viewfinder-container">
+        <div class="cam-corners top-left"></div>
+        <div class="cam-corners top-right"></div>
+        <div class="cam-corners bottom-left"></div>
+        <div class="cam-corners bottom-right"></div>
         
-        <div id="character-display">
-            <div class="art-placeholder" id="art-hint">
-                [ พื้นที่แสดงภาพตัวละคร ]
+        <div class="rec-indicator">
+            <div class="rec-dot"></div> REC
+        </div>
+
+        <div id="target-image">
+            <h2 class="art-title" id="shot-title">Shot 01</h2>
+            <p class="art-description" id="shot-desc">
+                </p>
+        </div>
+
+        <div id="focus-ui">
+            <div class="focus-track">
+                <div class="focus-perfect-zone"></div>
+                <div class="focus-cursor" id="cursor"></div>
             </div>
+            <button class="snap-btn" id="btn-snap" onclick="takeShot()"></button>
         </div>
 
-        <div id="choices-container"></div>
-
-        <div id="dialogue-box" onclick="advanceStory()">
-            <div id="speaker-name">Name</div>
-            <div id="dialogue-text">Loading...</div>
-            <div class="next-indicator" id="next-btn">Tap to continue ➔</div>
+        <div class="action-group" id="action-group">
+            <button class="text-btn" onclick="nextShot()">Next Pose</button>
+            <button class="text-btn" onclick="retryShot()" style="color: var(--text-muted);">Retry</button>
         </div>
-
     </div>
 
     <script>
-        // โครงสร้างเนื้อเรื่อง (Story Nodes)
-        const story = {
-            start: {
-                speaker: "",
-                text: "คุณผลักประตูห้องพักรับรอง VVIP เข้าไป กลิ่นหอมจางๆ ลอยมาเตะจมูกบรรยากาศหลังเวทีดูเงียบสงบขัดกับเสียงเบสที่ดังกระหึ่มอยู่ด้านนอก",
-                next: "node_1"
+        // ข้อมูลช็อตสุดพิเศษที่สอดคล้องกับความชื่นชอบ
+        const shots = [
+            {
+                id: "THE SIGNATURE LOOK",
+                desc: "หนุ่มร่างสูง 190 ซม. ในชุดนักศึกษาไทยที่ปลดกระดุมบนเล็กน้อย สวมทับด้วยแจ็กเก็ตสูทตัวเนี้ยบ ลายเส้นซอฟต์ๆ ขับเน้นใบหน้าคมคายสไตล์มันฮวา ท่ามกลางแสงไฟสเตจสีส้มทอง",
+                speed: 3 // ความเร็วของเคอร์เซอร์
             },
-            node_1: {
-                speaker: "",
-                text: "ตรงหน้าคุณคือ 'คิณ' ชายหนุ่มเจ้าของความสูง 190 ซม. รูปร่างกำยำแต่เพรียวสมส่วน เขาอยู่ในชุดที่ดูเหมือนการนำเสื้อเชิ้ตนักศึกษามาสไตลิ่งเข้ากับแจ็กเก็ตสุดเนี้ยบ ใบหน้าหล่อคมสไตล์มันฮวาหันมามองคุณ",
-                next: "node_2"
+            {
+                id: "ARCHITECTURAL VISION",
+                desc: "ช็อตโคลสอัพ โชว์เสน่ห์ความเนี้ยบผ่านปลายนิ้วที่กำลังถือ 'โมเดลสถาปัตยกรรม' โทนสีภาพมีความเป็นธรรมชาติ ให้ความรู้สึกเรียบหรูและทรงพลังในคราวเดียวกัน",
+                speed: 4.5
             },
-            node_2: {
-                speaker: "คิณ",
-                text: "อ้าว... คุณนี่เอง นึกว่าสตาฟฟ์ซะอีก มาพอดีเลย ผมกำลังปวดหัวอยู่พอดี",
-                next: "node_3"
-            },
-            node_3: {
-                speaker: "คิณ",
-                text: "เขาชูขวดน้ำหอมดีไซน์หรูสองขวดในมือ 'ผมกำลังเลือกว่าคืนนี้จะใช้กลิ่นไหนขึ้นโชว์ดี คุณว่าฟีลลิ่งคอนเสิร์ตคืนนี้เหมาะกับกลิ่นแบบไหน?'",
-                choices: [
-                    { text: "กลิ่น Woody & Leather เข้มขรึม ดุดัน", next: "path_perfume_A" },
-                    { text: "กลิ่น Fresh Citrus สดชื่น มีเอนเนอร์จี้", next: "path_perfume_B" }
-                ]
-            },
-            path_perfume_A: {
-                speaker: "คิณ",
-                text: "เขายกยิ้มมุมปากอย่างถูกใจ 'ดุดันงั้นเหรอ... ก็ดีนะ เข้ากับไฮไลท์ช่วงกลางคืนพอดี เทสต์ดีเหมือนเดิมเลยนะคุณ'",
-                next: "node_4"
-            },
-            path_perfume_B: {
-                speaker: "คิณ",
-                text: "เขาพยักหน้า 'จริงด้วย วันนี้เราต้องปลุกเอนเนอร์จี้คนดูให้สุด กลิ่นนี้น่าจะทำให้ผมตื่นตัวได้ดี ขอบคุณที่ช่วยเลือกนะ'",
-                next: "node_4"
-            },
-            node_4: {
-                speaker: "",
-                text: "คิณวางขวดน้ำหอมลง ก่อนจะหมุนตัวเดินไปที่โต๊ะกระจก บนนั้นมี 'โมเดลสถาปัตยกรรม' ของเวทีคอนเสิร์ตตั้งอยู่ เขาใช้ปลายนิ้วไล้ไปตามโครงสร้างของโมเดลเบาๆ",
-                next: "node_5"
-            },
-            node_5: {
-                speaker: "คิณ",
-                text: "ไหนๆ ก็แวะมาแล้ว... ในฐานะ VIP ของงาน คุณคิดว่าภาพรวมของสเตจนี้ มีจุดไหนที่เราควรดึงสายตาคนดูมากที่สุด?",
-                choices: [
-                    { text: "ระบบแสงไฟ (Lighting) ต้องจัดเต็มให้ดูมีมิติ", next: "ending_lighting" },
-                    { text: "สเปซและโครงสร้าง (Structure) ดีไซน์เวทีสวยอยู่แล้ว", next: "ending_structure" }
-                ]
-            },
-            ending_lighting: {
-                speaker: "คิณ",
-                text: "สายตาเขาทอประกาย 'ผมก็คิดแบบนั้น แสงไฟจะช่วยขับเส้นสายของเวทีให้ชัดขึ้น... เหมือนที่มันสะท้อนอยู่ในตาคุณตอนนี้เลย'",
-                next: "ending_final"
-            },
-            ending_structure: {
-                speaker: "คิณ",
-                text: "เขามองโมเดลสลับกับคุณ 'มุมมองเฉียบขาดมาก โครงสร้างที่มั่นคงคือหัวใจสำคัญของการโชว์... ผมจะจำคำแนะนำนี้ไว้'",
-                next: "ending_final"
-            },
-            ending_final: {
-                speaker: "",
-                text: "เสียงวิทยุสื่อสารจากทีมงานดังขึ้นเตือนเวลาสแตนด์บาย คิณหยิบเสื้อแจ็กเก็ตขึ้นมาพาดบ่า 'ผมต้องไปแล้ว... รอดูความสมบูรณ์แบบหน้าเวทีได้เลยนะ'",
-                next: "end"
-            },
-            end: {
-                speaker: "",
-                text: "THE END - ขอบคุณที่เข้าร่วมประสบการณ์ BCU FORMULA CONCERT",
-                next: null
+            {
+                id: "CONTRAST & PERFUME",
+                desc: "การผสมผสานที่ลงตัว ชายหนุ่มร่างกำยำยืนเคียงคู่กับพาร์ทเนอร์ร่างโปร่งหน้าหวาน (180 ซม.) ในมือถือขวดน้ำหอมระดับพรีเมียม สายตาที่มองมาทะลุเลนส์อย่างดุดันและเย้ายวน",
+                speed: 6
             }
-        };
+        ];
 
-        // ตัวแปรควบคุมเกม
-        let currentNode = "start";
-        const dialogueText = document.getElementById("dialogue-text");
-        const speakerName = document.getElementById("speaker-name");
-        const choicesContainer = document.getElementById("choices-container");
-        const nextBtn = document.getElementById("next-btn");
-        const dialogueBox = document.getElementById("dialogue-box");
+        let currentShotIndex = 0;
+        let cursorPosition = 0;
+        let cursorDirection = 1; // 1 = วิ่งขวา, -1 = วิ่งซ้าย
+        let animationId;
+        let isPlaying = true;
 
-        // ฟังก์ชันแสดงผล Node ปัจจุบัน
-        function renderNode(nodeId) {
-            const node = story[nodeId];
-            currentNode = nodeId;
+        const cursor = document.getElementById('cursor');
+        const targetImage = document.getElementById('target-image');
+        const shotTitle = document.getElementById('shot-title');
+        const shotDesc = document.getElementById('shot-desc');
+        const focusUi = document.getElementById('focus-ui');
+        const actionGroup = document.getElementById('action-group');
+        const flashEffect = document.getElementById('flash');
 
-            // เคลียร์ปุ่มตัวเลือก
-            choicesContainer.innerHTML = "";
+        function initShot() {
+            const shot = shots[currentShotIndex];
+            shotTitle.innerText = shot.id;
+            shotDesc.innerText = shot.desc;
             
-            // จัดการชื่อคนพูด
-            if (node.speaker) {
-                speakerName.style.display = "block";
-                speakerName.innerText = node.speaker;
-            } else {
-                speakerName.style.display = "none";
+            // รีเซ็ต UI
+            targetImage.className = '';
+            shotTitle.classList.remove('perfect-shot-text');
+            shotDesc.classList.remove('perfect-shot-text');
+            focusUi.style.display = 'flex';
+            actionGroup.style.display = 'none';
+            
+            cursorPosition = 0;
+            isPlaying = true;
+            animateCursor();
+        }
+
+        function animateCursor() {
+            if (!isPlaying) return;
+
+            const speed = shots[currentShotIndex].speed;
+            cursorPosition += speed * cursorDirection;
+
+            // วิ่งเด้งซ้ายขวา (0% ถึง 100%)
+            if (cursorPosition >= 100) {
+                cursorPosition = 100;
+                cursorDirection = -1;
+            } else if (cursorPosition <= 0) {
+                cursorPosition = 0;
+                cursorDirection = 1;
             }
 
-            // แสดงข้อความพร้อม Animation
-            dialogueText.classList.remove("fade-text");
-            void dialogueText.offsetWidth; // Trigger reflow
-            dialogueText.classList.add("fade-text");
-            dialogueText.innerText = node.text;
+            cursor.style.left = `${cursorPosition}%`;
+            
+            // เปลี่ยนสีพื้นหลังนิดหน่อยตามระยะโฟกัส (สร้างความรู้สึกสมจริง)
+            const distanceFromCenter = Math.abs(50 - cursorPosition);
+            const blurAmount = 25 * (distanceFromCenter / 50);
+            targetImage.style.filter = `blur(${blurAmount + 5}px) grayscale(${distanceFromCenter}%)`;
 
-            // ตรวจสอบว่ามี Choices ไหม
-            if (node.choices) {
-                nextBtn.style.display = "none"; // ซ่อนปุ่ม Next
-                dialogueBox.style.pointerEvents = "none"; // ห้ามกดกล่องข้อความ
+            animationId = requestAnimationFrame(animateCursor);
+        }
+
+        function takeShot() {
+            if (!isPlaying) return;
+            isPlaying = false;
+            cancelAnimationFrame(animationId);
+
+            // ตำแหน่ง Center คือ 50%, โซน Perfect คือกว้าง 15% (42.5% - 57.5%)
+            const isPerfect = cursorPosition >= 42.5 && cursorPosition <= 57.5;
+
+            // เอฟเฟกต์แฟลชกล้อง
+            flashEffect.style.opacity = '1';
+            flashEffect.style.transition = 'none';
+            
+            setTimeout(() => {
+                flashEffect.style.transition = 'opacity 0.8s ease-out';
+                flashEffect.style.opacity = '0';
+            }, 50);
+
+            if (isPerfect) {
+                // ยิงช็อตเพอร์เฟกต์! แสดงภาพชัดเจน
+                targetImage.classList.add('perfect-shot');
+                shotTitle.classList.add('perfect-shot-text');
+                shotDesc.classList.add('perfect-shot-text');
                 
-                node.choices.forEach((choice, index) => {
-                    const btn = document.createElement("button");
-                    btn.className = "choice-btn";
-                    btn.innerText = choice.text;
-                    btn.style.animationDelay = `${index * 0.1}s`; // ดีเลย์ปุ่มให้เด้งขึ้นมาทีละอัน
-                    
-                    // เมื่อกดเลือก Choice
-                    btn.onclick = () => {
-                        dialogueBox.style.pointerEvents = "auto";
-                        renderNode(choice.next);
-                    };
-                    choicesContainer.appendChild(btn);
-                });
+                // สลับปุ่ม
+                focusUi.style.display = 'none';
+                actionGroup.style.display = 'flex';
             } else {
-                // ไม่มี Choices แสดงปุ่ม Next ตามปกติ
-                if (node.next) {
-                    nextBtn.style.display = "block";
-                    nextBtn.innerText = "Tap to continue ➔";
-                } else {
-                    nextBtn.style.display = "none"; // ฉากจบ
-                }
+                // พลาดเป้า เบลอจัดเหมือนเดิม
+                targetImage.style.filter = 'blur(30px) grayscale(80%)';
+                
+                // กระตุกปุ่มเล็กน้อยแสดงถึงการพลาด
+                const btn = document.getElementById('btn-snap');
+                btn.style.transform = 'translateX(-5px)';
+                setTimeout(() => btn.style.transform = 'translateX(5px)', 50);
+                setTimeout(() => btn.style.transform = 'translateX(0)', 100);
+
+                setTimeout(() => {
+                    isPlaying = true;
+                    animateCursor();
+                }, 800); // ให้โอกาสแก้ตัวอัตโนมัติ
             }
         }
 
-        // ฟังก์ชันเมื่อกดคลิกที่กล่องข้อความเพื่อไปต่อ
-        function advanceStory() {
-            const node = story[currentNode];
-            if (node.choices) return; // ถ้าติดหน้าเลือก Choice ห้ามกดข้าม
-            if (node.next) {
-                renderNode(node.next);
+        function nextShot() {
+            currentShotIndex++;
+            if (currentShotIndex >= shots.length) {
+                // จบเกม (วนกลับหรือทำหน้าขอบคุณ)
+                currentShotIndex = 0; 
+                alert("ถ่ายครบทุกช็อตระดับ VVIP แล้ว! บันทึกภาพลงแกลเลอรีของคุณได้เลย");
             }
+            initShot();
         }
 
-        // เริ่มเกม
-        window.onload = () => {
-            renderNode("start");
-        };
+        function retryShot() {
+            initShot();
+        }
+
+        // เริ่มเกมครั้งแรก
+        window.onload = initShot;
     </script>
 </body>
 </html>
