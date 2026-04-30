@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BCU FORMULA CONCERT | Backstage Encounter</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #09090b;
+            --text-main: #f8fafc;
+            --text-muted: #a1a1aa;
+            --accent-glow: #3b82f6;
+            --glass-bg: rgba(20, 20, 25, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Prompt', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.15), transparent 50%),
+                radial-gradient(circle at 50% 100%, rgba(139, 92, 246, 0.1), transparent 50%);
+        }
+
+        #game-container {
+            width: 100%;
+            max-width: 800px;
+            height: 100vh;
+            max-height: 900px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Character Art Area (พื้นที่สำหรับใส่รูปวาดของคุณ) */
+        #character-display {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            position: relative;
+            z-index: 1;
+            padding-bottom: 2rem;
+            animation: fadeIn 1.5s ease-out;
+        }
+
+        /* กล่องข้อความ Placeholder บอกตำแหน่งใส่รูป */
+        .art-placeholder {
+            position: absolute;
+            top: 40%;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.2);
+            font-size: 0.9rem;
+            letter-spacing: 0.05em;
+            pointer-events: none;
+        }
+
+        /* Dialogue Box (กล่องข้อความ) */
+        #dialogue-box {
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            padding: 2.5rem 3rem;
+            min-height: 220px;
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 -20px 40px rgba(0, 0, 0, 0.5);
+            border-top: 1px solid var(--glass-border);
+            border-radius: 32px 32px 0 0;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+
+        #speaker-name {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--accent-glow);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+            display: none; /* ซ่อนไว้ก่อน จะแสดงเมื่อมีคนพูด */
+        }
+
+        #dialogue-text {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            font-weight: 300;
+            color: #e4e4e7;
+        }
+
+        /* Choices Container */
+        #choices-container {
+            position: absolute;
+            top: -120px; /* ลอยอยู่เหนือกล่องข้อความ */
+            left: 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            padding: 0 2rem;
+            z-index: 20;
+        }
+
+        .choice-btn {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 400;
+            cursor: pointer;
+            width: 100%;
+            max-width: 400px;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: translateY(10px);
+            opacity: 0;
+            animation: slideUpFade 0.4s forwards;
+        }
+
+        .choice-btn:hover {
+            background: #fff;
+            color: #000;
+            transform: translateY(-2px) scale(1.02) !important;
+            box-shadow: 0 10px 20px rgba(255, 255, 255, 0.15);
+        }
+
+        /* Next Indicator */
+        .next-indicator {
+            position: absolute;
+            bottom: 1.5rem;
+            right: 2rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            animation: pulse 1.5s infinite;
+            cursor: pointer;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUpFade {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.4; }
+            50% { opacity: 1; }
+            100% { opacity: 0.4; }
+        }
+
+        /* Fade transition effect for text */
+        .fade-text {
+            animation: fadeIn 0.3s ease-in;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        
+        <div id="character-display">
+            <div class="art-placeholder" id="art-hint">
+                [ พื้นที่แสดงภาพตัวละคร ]
+            </div>
+        </div>
+
+        <div id="choices-container"></div>
+
+        <div id="dialogue-box" onclick="advanceStory()">
+            <div id="speaker-name">Name</div>
+            <div id="dialogue-text">Loading...</div>
+            <div class="next-indicator" id="next-btn">Tap to continue ➔</div>
+        </div>
+
+    </div>
+
+    <script>
+        // โครงสร้างเนื้อเรื่อง (Story Nodes)
+        const story = {
+            start: {
+                speaker: "",
+                text: "คุณผลักประตูห้องพักรับรอง VVIP เข้าไป กลิ่นหอมจางๆ ลอยมาเตะจมูกบรรยากาศหลังเวทีดูเงียบสงบขัดกับเสียงเบสที่ดังกระหึ่มอยู่ด้านนอก",
+                next: "node_1"
+            },
+            node_1: {
+                speaker: "",
+                text: "ตรงหน้าคุณคือ 'คิณ' ชายหนุ่มเจ้าของความสูง 190 ซม. รูปร่างกำยำแต่เพรียวสมส่วน เขาอยู่ในชุดที่ดูเหมือนการนำเสื้อเชิ้ตนักศึกษามาสไตลิ่งเข้ากับแจ็กเก็ตสุดเนี้ยบ ใบหน้าหล่อคมสไตล์มันฮวาหันมามองคุณ",
+                next: "node_2"
+            },
+            node_2: {
+                speaker: "คิณ",
+                text: "อ้าว... คุณนี่เอง นึกว่าสตาฟฟ์ซะอีก มาพอดีเลย ผมกำลังปวดหัวอยู่พอดี",
+                next: "node_3"
+            },
+            node_3: {
+                speaker: "คิณ",
+                text: "เขาชูขวดน้ำหอมดีไซน์หรูสองขวดในมือ 'ผมกำลังเลือกว่าคืนนี้จะใช้กลิ่นไหนขึ้นโชว์ดี คุณว่าฟีลลิ่งคอนเสิร์ตคืนนี้เหมาะกับกลิ่นแบบไหน?'",
+                choices: [
+                    { text: "กลิ่น Woody & Leather เข้มขรึม ดุดัน", next: "path_perfume_A" },
+                    { text: "กลิ่น Fresh Citrus สดชื่น มีเอนเนอร์จี้", next: "path_perfume_B" }
+                ]
+            },
+            path_perfume_A: {
+                speaker: "คิณ",
+                text: "เขายกยิ้มมุมปากอย่างถูกใจ 'ดุดันงั้นเหรอ... ก็ดีนะ เข้ากับไฮไลท์ช่วงกลางคืนพอดี เทสต์ดีเหมือนเดิมเลยนะคุณ'",
+                next: "node_4"
+            },
+            path_perfume_B: {
+                speaker: "คิณ",
+                text: "เขาพยักหน้า 'จริงด้วย วันนี้เราต้องปลุกเอนเนอร์จี้คนดูให้สุด กลิ่นนี้น่าจะทำให้ผมตื่นตัวได้ดี ขอบคุณที่ช่วยเลือกนะ'",
+                next: "node_4"
+            },
+            node_4: {
+                speaker: "",
+                text: "คิณวางขวดน้ำหอมลง ก่อนจะหมุนตัวเดินไปที่โต๊ะกระจก บนนั้นมี 'โมเดลสถาปัตยกรรม' ของเวทีคอนเสิร์ตตั้งอยู่ เขาใช้ปลายนิ้วไล้ไปตามโครงสร้างของโมเดลเบาๆ",
+                next: "node_5"
+            },
+            node_5: {
+                speaker: "คิณ",
+                text: "ไหนๆ ก็แวะมาแล้ว... ในฐานะ VIP ของงาน คุณคิดว่าภาพรวมของสเตจนี้ มีจุดไหนที่เราควรดึงสายตาคนดูมากที่สุด?",
+                choices: [
+                    { text: "ระบบแสงไฟ (Lighting) ต้องจัดเต็มให้ดูมีมิติ", next: "ending_lighting" },
+                    { text: "สเปซและโครงสร้าง (Structure) ดีไซน์เวทีสวยอยู่แล้ว", next: "ending_structure" }
+                ]
+            },
+            ending_lighting: {
+                speaker: "คิณ",
+                text: "สายตาเขาทอประกาย 'ผมก็คิดแบบนั้น แสงไฟจะช่วยขับเส้นสายของเวทีให้ชัดขึ้น... เหมือนที่มันสะท้อนอยู่ในตาคุณตอนนี้เลย'",
+                next: "ending_final"
+            },
+            ending_structure: {
+                speaker: "คิณ",
+                text: "เขามองโมเดลสลับกับคุณ 'มุมมองเฉียบขาดมาก โครงสร้างที่มั่นคงคือหัวใจสำคัญของการโชว์... ผมจะจำคำแนะนำนี้ไว้'",
+                next: "ending_final"
+            },
+            ending_final: {
+                speaker: "",
+                text: "เสียงวิทยุสื่อสารจากทีมงานดังขึ้นเตือนเวลาสแตนด์บาย คิณหยิบเสื้อแจ็กเก็ตขึ้นมาพาดบ่า 'ผมต้องไปแล้ว... รอดูความสมบูรณ์แบบหน้าเวทีได้เลยนะ'",
+                next: "end"
+            },
+            end: {
+                speaker: "",
+                text: "THE END - ขอบคุณที่เข้าร่วมประสบการณ์ BCU FORMULA CONCERT",
+                next: null
+            }
+        };
+
+        // ตัวแปรควบคุมเกม
+        let currentNode = "start";
+        const dialogueText = document.getElementById("dialogue-text");
+        const speakerName = document.getElementById("speaker-name");
+        const choicesContainer = document.getElementById("choices-container");
+        const nextBtn = document.getElementById("next-btn");
+        const dialogueBox = document.getElementById("dialogue-box");
+
+        // ฟังก์ชันแสดงผล Node ปัจจุบัน
+        function renderNode(nodeId) {
+            const node = story[nodeId];
+            currentNode = nodeId;
+
+            // เคลียร์ปุ่มตัวเลือก
+            choicesContainer.innerHTML = "";
+            
+            // จัดการชื่อคนพูด
+            if (node.speaker) {
+                speakerName.style.display = "block";
+                speakerName.innerText = node.speaker;
+            } else {
+                speakerName.style.display = "none";
+            }
+
+            // แสดงข้อความพร้อม Animation
+            dialogueText.classList.remove("fade-text");
+            void dialogueText.offsetWidth; // Trigger reflow
+            dialogueText.classList.add("fade-text");
+            dialogueText.innerText = node.text;
+
+            // ตรวจสอบว่ามี Choices ไหม
+            if (node.choices) {
+                nextBtn.style.display = "none"; // ซ่อนปุ่ม Next
+                dialogueBox.style.pointerEvents = "none"; // ห้ามกดกล่องข้อความ
+                
+                node.choices.forEach((choice, index) => {
+                    const btn = document.createElement("button");
+                    btn.className = "choice-btn";
+                    btn.innerText = choice.text;
+                    btn.style.animationDelay = `${index * 0.1}s`; // ดีเลย์ปุ่มให้เด้งขึ้นมาทีละอัน
+                    
+                    // เมื่อกดเลือก Choice
+                    btn.onclick = () => {
+                        dialogueBox.style.pointerEvents = "auto";
+                        renderNode(choice.next);
+                    };
+                    choicesContainer.appendChild(btn);
+                });
+            } else {
+                // ไม่มี Choices แสดงปุ่ม Next ตามปกติ
+                if (node.next) {
+                    nextBtn.style.display = "block";
+                    nextBtn.innerText = "Tap to continue ➔";
+                } else {
+                    nextBtn.style.display = "none"; // ฉากจบ
+                }
+            }
+        }
+
+        // ฟังก์ชันเมื่อกดคลิกที่กล่องข้อความเพื่อไปต่อ
+        function advanceStory() {
+            const node = story[currentNode];
+            if (node.choices) return; // ถ้าติดหน้าเลือก Choice ห้ามกดข้าม
+            if (node.next) {
+                renderNode(node.next);
+            }
+        }
+
+        // เริ่มเกม
+        window.onload = () => {
+            renderNode("start");
+        };
+    </script>
+</body>
+</html>
